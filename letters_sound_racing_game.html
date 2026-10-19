@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Letters Sound Racing - Phonics Pronunciation Game</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for Child-Friendly Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <!-- Canvas Confetti for Celebration -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Fredoka', 'Quicksand', sans-serif;
+            background-color: #f0f9ff;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .font-sans-body {
+            font-family: 'Quicksand', sans-serif;
+        }
+
+        /* Custom Scrollbar for Teacher Modal */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 8px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 8px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Pulse Animation for Microphone */
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        .mic-active {
+            animation: pulse-ring 1.5s infinite;
+        }
+
+        /* Bounce effect for letters */
+        .bounce-letter {
+            display: inline-block;
+            transition: transform 0.2s ease;
+        }
+        .bounce-letter:hover {
+            transform: translateY(-8px) scale(1.1);
+        }
+
+        /* Game Canvas Style */
+        #gameCanvas {
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col justify-between overflow-x-hidden bg-gradient-to-b from-sky-200 via-sky-100 to-amber-50">
+
+    <!-- Top Navigation Header -->
+    <header class="w-full bg-white/80 backdrop-blur-md border-b-4 border-amber-300 px-4 py-3 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="goToScreen('loginScreen')">
+                <div class="bg-red-500 text-white p-2 rounded-2xl shadow-md transform -rotate-6">
+                    <i class="fa-solid font-bold fa-car-side text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-bold text-red-500 leading-tight tracking-wide">Letters Sound Racing</h1>
+                    <p class="text-xs text-sky-600 font-semibold hidden sm:block">Phonics Adventure for Year 1 & 2</p>
+                </div>
+            </div>
+
+            <!-- Header Controls / Info -->
+            <div class="flex items-center space-x-2 sm:space-x-4">
+                <div id="studentBadge" class="hidden bg-amber-100 border-2 border-amber-300 text-amber-800 px-3 py-1 rounded-full text-sm font-bold items-center space-x-2">
+                    <i class="fa-solid fa-user-graduate"></i>
+                    <span id="badgeName">Pupil</span>
+                    <span class="text-xs bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full" id="badgeClass">Class</span>
+                </div>
+
+                <button onclick="openSoundManager()" title="Custom Alphabet Sounds" class="bg-purple-100 hover:bg-purple-200 text-purple-700 border-2 border-purple-300 font-bold p-2.5 sm:px-3 sm:py-1.5 rounded-2xl text-sm transition flex items-center space-x-1 shadow-sm">
+                    <i class="fa-solid fa-sliders text-base"></i>
+                    <span class="hidden md:inline">Audio Settings</span>
+                </button>
+
+                <button onclick="openTeacherReport()" title="Teacher Assessment Report" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 border-2 border-emerald-300 font-bold p-2.5 sm:px-3 sm:py-1.5 rounded-2xl text-sm transition flex items-center space-x-1 shadow-sm">
+                    <i class="fa-solid fa-chart-line text-base"></i>
+                    <span class="hidden md:inline">Teacher Report</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER FOR SCREENS -->
+    <main class="max-w-5xl mx-auto w-full p-4 flex-grow flex flex-col justify-center items-center">
+
+        <!-- 1. LOGIN / START SCREEN -->
+        <section id="loginScreen" class="w-full max-w-lg bg-white border-4 border-sky-300 rounded-3xl p-6 md:p-8 shadow-2xl my-auto text-center transform transition-all duration-300">
+            <div class="inline-block bg-red-100 text-red-500 p-4 rounded-full mb-3 border-4 border-red-200 animate-bounce">
+                <i class="fa-solid fa-car-side text-5xl"></i>
+            </div>
+            <h2 class="text-3xl md:text-4xl font-extrabold text-red-500 tracking-wide mb-2">Letters Sound Racing</h2>
+            <p class="text-slate-600 font-medium mb-6 text-base md:text-lg">Sound out and blend the letters together to get the car move to the next town!</p>
+
+            <form id="loginForm" onsubmit="startGame(event)" class="space-y-4 text-left">
+                <div>
+                    <label class="block text-slate-700 font-bold text-sm mb-1 ml-1">Pupil's Name:</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-user absolute left-4 top-3.5 text-sky-400"></i>
+                        <input type="text" id="pupilName" required placeholder="e.g. Sarah Ahmad" class="w-full pl-11 pr-4 py-3 bg-sky-50 border-2 border-sky-200 rounded-2xl focus:border-red-400 focus:bg-white outline-none font-bold text-slate-800 text-lg transition">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-slate-700 font-bold text-sm mb-1 ml-1">Class / Section:</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-school absolute left-4 top-3.5 text-sky-400"></i>
+                        <select id="pupilClass" required class="w-full pl-11 pr-4 py-3 bg-sky-50 border-2 border-sky-200 rounded-2xl focus:border-red-400 focus:bg-white outline-none font-bold text-slate-800 text-lg transition">
+                            <option value="" disabled selected>Select your class</option>
+                            <option value="Year 1 - Star">Year 1 - Star</option>
+                            <option value="Year 1 - Sun">Year 1 - Sun</option>
+                            <option value="Year 2 - Blue">Year 2 - Blue</option>
+                            <option value="Year 2 - Green">Year 2 - Green</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full mt-6 bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 text-white font-extrabold text-2xl py-4 rounded-2xl border-b-4 border-teal-700 active:border-b-0 active:translate-y-1 shadow-lg transition flex items-center justify-center space-x-3">
+                    <span>START RACING!</span>
+                    <i class="fa-solid fa-flag-checkered"></i>
+                </button>
+            </form>
+        </section>
+
+        <!-- 2. GAME MAIN INTERFACE -->
+        <section id="gameScreen" class="hidden w-full flex-col items-center space-y-4 my-auto">
+            
+            <!-- Game HUD / Header Info -->
+            <div class="w-full bg-white border-2 border-sky-200 rounded-2xl p-3 md:p-4 shadow-sm flex flex-wrap justify-between items-center gap-2">
+                <div class="flex items-center space-x-3">
+                    <span id="levelBadge" class="bg-gradient-to-r from-amber-400 to-orange-400 text-white font-extrabold px-3 py-1 rounded-xl text-sm md:text-base shadow-sm">
+                        Level 1: Town 1
+                    </span>
+                    <span id="wordProgressText" class="text-slate-600 font-bold text-sm md:text-base">
+                        Word 1 of 5
+                    </span>
+                </div>
+
+                <!-- Stars Counter -->
+                <div class="flex items-center space-x-2">
+                    <div id="starsContainer" class="flex text-amber-400 text-xl space-x-1">
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-regular fa-star"></i>
+                        <i class="fa-regular fa-star"></i>
+                    </div>
+                    <span id="scoreText" class="font-extrabold text-lg text-amber-600 ml-1">0 Stars</span>
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <button onclick="resetCurrentLevel()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold px-3 py-1.5 rounded-xl text-xs sm:text-sm border border-slate-300 transition flex items-center space-x-1">
+                        <i class="fa-solid fa-rotate-right"></i>
+                        <span>Reset</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="w-full bg-slate-200 h-4 rounded-full overflow-hidden border-2 border-white shadow-inner">
+                <div id="progressBar" class="bg-gradient-to-r from-emerald-400 to-green-500 h-full w-0 transition-all duration-500 rounded-full"></div>
+            </div>
+
+            <!-- 2D TOWN ROAD ANIMATION CANVAS -->
+            <div class="w-full relative overflow-hidden rounded-3xl border-4 border-amber-300 bg-sky-200 shadow-md">
+                <canvas id="gameCanvas" class="w-full h-44 sm:h-52 md:h-60 block"></canvas>
+                <!-- Target Destination Tag -->
+                <div class="absolute top-2 right-3 bg-white/90 backdrop-blur border-2 border-sky-300 px-3 py-1 rounded-full text-xs font-bold text-sky-700 flex items-center space-x-1 shadow">
+                    <i class="fa-solid fa-location-dot text-red-500"></i>
+                    <span id="townNameTag">Animal & Cap Town</span>
+                </div>
+            </div>
+
+            <!-- PHONICS & PRONUNCIATION INTERACTION AREA -->
+            <div class="w-full bg-white border-4 border-sky-200 rounded-3xl p-4 md:p-6 shadow-xl flex flex-col items-center space-y-4">
+                
+                <!-- Prompt Question -->
+                <div class="text-center">
+                    <h3 id="promptQuestion" class="text-lg md:text-xl font-extrabold text-sky-700 flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-volume-high text-sky-500"></i>
+                        <span>Sound out each letter, then blend the word together!</span>
+                    </h3>
+                </div>
+
+                <!-- CVC Word Visual Tile Display -->
+                <div class="flex items-center justify-center space-x-3 md:space-x-6 my-2">
+                    <div id="phonemeTiles" class="flex space-x-2 sm:space-x-4">
+                        <!-- Phoneme Tiles Inserted Dynamically -->
+                    </div>
+                </div>
+
+                <!-- Pronounce Full Blend Button -->
+                <button onclick="speakFullWord()" class="bg-sky-100 hover:bg-sky-200 text-sky-800 font-bold px-4 py-2 rounded-2xl text-sm border-2 border-sky-300 transition flex items-center space-x-2">
+                    <i class="fa-solid fa-circle-play text-sky-600 text-lg"></i>
+                    <span>Hear Full Word</span>
+                </button>
+
+                <!-- MICROPHONE & ANSWER CONTROLS -->
+                <div class="flex flex-col items-center justify-center space-y-3 w-full pt-2">
+                    
+                    <!-- Large Animated Microphone Button -->
+                    <button id="micBtn" onclick="toggleMicrophone()" class="relative bg-gradient-to-tr from-red-500 to-rose-400 hover:from-red-600 hover:to-rose-500 text-white rounded-full p-6 sm:p-7 shadow-xl transform active:scale-95 transition flex items-center justify-center border-4 border-white">
+                        <i class="fa-solid fa-microphone text-3xl sm:text-4xl"></i>
+                    </button>
+                    
+                    <p id="micStatus" class="font-bold text-slate-600 text-sm md:text-base animate-pulse">
+                        Tap Microphone to Say the Word!
+                    </p>
+
+                    <!-- Feedback Output Message -->
+                    <div id="feedbackBox" class="min-h-[2.5rem] flex items-center justify-center">
+                        <span id="feedbackText" class="font-extrabold text-lg md:text-xl text-center px-4 py-1.5 rounded-full transition-all duration-300"></span>
+                    </div>
+
+                    <!-- Manual Override / Testing Options (Dropdown Toggle) -->
+                    <div class="pt-2 w-full max-w-md border-t border-slate-100 text-center">
+                        <button onclick="toggleFallbackInput()" class="text-xs text-slate-500 hover:text-sky-600 font-bold underline mb-2">
+                            Can't use microphone? Tap here to type or auto-check
+                        </button>
+                        
+                        <div id="fallbackArea" class="hidden flex items-center space-x-2 mt-1">
+                            <input type="text" id="manualInput" placeholder="Type word here..." class="flex-grow px-3 py-2 border-2 border-slate-300 rounded-xl font-bold text-slate-700 outline-none focus:border-sky-400 text-sm">
+                            <button onclick="checkManualAnswer()" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-4 py-2 rounded-xl text-sm transition">
+                                Submit
+                            </button>
+                            <button onclick="simulateCorrectAnswer()" title="For Quick Demo" class="bg-amber-400 hover:bg-amber-500 text-white font-bold px-3 py-2 rounded-xl text-xs transition">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> Pass
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- 3. FINAL CELEBRATION SCREEN -->
+        <section id="victoryScreen" class="hidden w-full max-w-xl bg-white border-4 border-amber-300 rounded-3xl p-6 md:p-8 shadow-2xl my-auto text-center">
+            <div class="inline-block bg-amber-100 text-amber-500 p-5 rounded-full mb-3 border-4 border-amber-200 animate-bounce">
+                <i class="fa-solid fa-trophy text-6xl"></i>
+            </div>
+
+            <h2 class="text-3xl md:text-5xl font-extrabold text-amber-500 tracking-wide mb-1">World Word Racer! 🏆</h2>
+            <p class="text-slate-600 font-bold text-lg mb-6">Congratulations! You mastered all the CVC phonics towns!</p>
+
+            <!-- Summary Stats Card -->
+            <div class="bg-sky-50 border-2 border-sky-200 rounded-2xl p-4 text-left space-y-2 mb-6">
+                <div class="flex justify-between border-b border-sky-200 pb-2">
+                    <span class="text-slate-600 font-bold">Pupil Name:</span>
+                    <span id="summaryName" class="font-extrabold text-sky-800">Sarah</span>
+                </div>
+                <div class="flex justify-between border-b border-sky-200 pb-2">
+                    <span class="text-slate-600 font-bold">Class:</span>
+                    <span id="summaryClass" class="font-extrabold text-sky-800">Year 1</span>
+                </div>
+                <div class="flex justify-between border-b border-sky-200 pb-2">
+                    <span class="text-slate-600 font-bold">Words Completed:</span>
+                    <span id="summaryWords" class="font-extrabold text-emerald-600">15 / 15</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-600 font-bold">Stars Earned:</span>
+                    <span id="summaryStars" class="font-extrabold text-amber-500">15 ⭐</span>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3">
+                <button onclick="restartGame()" class="flex-1 bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 text-white font-extrabold text-xl py-3.5 rounded-2xl border-b-4 border-teal-700 active:border-b-0 active:translate-y-1 shadow-md transition flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span>Play Again</span>
+                </button>
+                <button onclick="goToScreen('loginScreen')" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-extrabold text-xl py-3.5 rounded-2xl border-b-4 border-slate-400 active:border-b-0 active:translate-y-1 shadow-md transition flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-house"></i>
+                    <span>Main Menu</span>
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 4. MODAL: TEACHER REPORT PANEL -->
+    <div id="teacherModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white border-4 border-emerald-300 rounded-3xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            
+            <!-- Modal Header -->
+            <div class="bg-emerald-500 text-white px-6 py-4 flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-chart-line text-2xl"></i>
+                    <h3 class="text-2xl font-extrabold">Teacher Assessment Report</h3>
+                </div>
+                <button onclick="closeTeacherReport()" class="text-white/80 hover:text-white text-2xl font-bold">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Modal Content -->
+            <div class="p-6 overflow-y-auto space-y-6 flex-grow">
+                
+                <!-- Summary Overview Header -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-emerald-50 border border-emerald-200 p-3 rounded-2xl text-center">
+                        <span class="text-xs text-slate-500 font-bold uppercase block">Current Student</span>
+                        <span id="reportStudent" class="text-lg font-extrabold text-emerald-800">None</span>
+                    </div>
+                    <div class="bg-sky-50 border border-sky-200 p-3 rounded-2xl text-center">
+                        <span class="text-xs text-slate-500 font-bold uppercase block">Level Progress</span>
+                        <span id="reportLevel" class="text-lg font-extrabold text-sky-800">Level 1</span>
+                    </div>
+                    <div class="bg-amber-50 border border-amber-200 p-3 rounded-2xl text-center">
+                        <span class="text-xs text-slate-500 font-bold uppercase block">Total Accuracy</span>
+                        <span id="reportAccuracy" class="text-lg font-extrabold text-amber-700">0%</span>
+                    </div>
+                </div>
+
+                <!-- Pronunciation Attempt Log Table -->
+                <div>
+                    <h4 class="font-extrabold text-slate-700 text-lg mb-3 flex items-center space-x-2">
+                        <i class="fa-solid fa-list-check text-emerald-500"></i>
+                        <span>Pronunciation Log</span>
+                    </h4>
+                    <div class="overflow-x-auto border-2 border-slate-200 rounded-2xl">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="bg-slate-100 text-slate-600 font-extrabold border-b border-slate-200">
+                                    <th class="p-3">Target Word</th>
+                                    <th class="p-3">Speech Input Received</th>
+                                    <th class="p-3">Result</th>
+                                    <th class="p-3">Attempts</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportTableBody" class="divide-y divide-slate-100 font-bold text-slate-700">
+                                <tr>
+                                    <td colspan="4" class="p-4 text-center text-slate-400 font-normal">No activity recorded yet. Start playing to generate log data.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="bg-slate-50 border-t border-slate-200 px-6 py-4 flex justify-between items-center">
+                <button onclick="exportReportCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl text-sm transition flex items-center space-x-2 shadow">
+                    <i class="fa-solid fa-file-csv text-base"></i>
+                    <span>Export CSV</span>
+                </button>
+                <button onclick="closeTeacherReport()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-5 py-2 rounded-xl text-sm transition">
+                    Close
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 5. MODAL: ALPHABET CUSTOM SOUND MANAGER -->
+    <div id="soundModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white border-4 border-purple-300 rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            
+            <div class="bg-purple-600 text-white px-6 py-4 flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-sliders text-2xl"></i>
+                    <h3 class="text-2xl font-extrabold">Custom Phonics Sound Manager</h3>
+                </div>
+                <button onclick="closeSoundManager()" class="text-white/80 hover:text-white text-2xl font-bold">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="p-6 overflow-y-auto space-y-4 flex-grow">
+                <p class="text-sm text-slate-600 font-medium bg-purple-50 p-3 rounded-2xl border border-purple-200">
+                    <i class="fa-solid fa-circle-info text-purple-500 mr-1"></i>
+                    Upload custom audio files (e.g. `.mp3` or `.wav`) for each letter sound, or test default Web Speech phonemes.
+                </p>
+
+                <div id="alphabetGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <!-- Letter Audio Controls dynamically generated -->
+                </div>
+            </div>
+
+            <div class="bg-slate-50 border-t border-slate-200 px-6 py-4 flex justify-between items-center">
+                <button onclick="resetCustomSounds()" class="text-red-500 hover:text-red-700 font-bold text-sm">
+                    Reset All to Default
+                </button>
+                <button onclick="closeSoundManager()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold px-6 py-2 rounded-xl text-sm transition">
+                    Done
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Banner -->
+    <footer class="w-full text-center py-3 text-xs text-slate-500 font-semibold border-t border-slate-200 bg-white/50">
+        Letters Sound Racing • Phonics Pronunciation Game for Year 1 & 2 Students
+    </footer>
+
+    <!-- GAME LOGIC JAVASCRIPT -->
+    <script>
+        /* ==========================================================================
+           CURRICULUM & DATA STRUCTURES
+           ========================================================================== */
+        const LEVELS = [
+            {
+                id: 1,
+                townName: "Animal & Cap Town",
+                words: [
+                    { word: "CAT", phonemes: ["c", "a", "t"] },
+                    { word: "CAR", phonemes: ["c", "a", "r"] },
+                    { word: "CAP", phonemes: ["c", "a", "p"] },
+                    { word: "COW", phonemes: ["c", "o", "w"] },
+                    { word: "COP", phonemes: ["c", "o", "p"] }
+                ]
+            },
+            {
+                id: 2,
+                townName: "Dog & Pot Express",
+                words: [
+                    { word: "DOG", phonemes: ["d", "o", "g"] },
+                    { word: "HOT", phonemes: ["h", "o", "t"] },
+                    { word: "POT", phonemes: ["p", "o", "t"] },
+                    { word: "DOT", phonemes: ["d", "o", "t"] },
+                    { word: "JOG", phonemes: ["j", "o", "g"] }
+                ]
+            },
+            {
+                id: 3,
+                townName: "Hen & Bed Highway",
+                words: [
+                    { word: "PEN", phonemes: ["p", "e", "n"] },
+                    { word: "HEN", phonemes: ["h", "e", "n"] },
+                    { word: "RED", phonemes: ["r", "e", "d"] },
+                    { word: "NET", phonemes: ["n", "e", "t"] },
+                    { word: "BED", phonemes: ["b", "e", "d"] }
+                ]
+            }
+        ];
+
+        // Phoneme sound representations for synthesis
+        const PHONEME_SOUND_MAP = {
+            a: "ah", b: "buh", c: "kuh", d: "duh", e: "eh", f: "fff",
+            g: "guh", h: "huh", i: "ih", j: "juh", k: "kuh", l: "lll",
+            m: "mmm", n: "nnn", o: "off", p: "puh", r: "rrr", s: "sss",
+            t: "tuh", u: "uh", v: "vvv", w: "wuh", x: "ks", y: "yuh", z: "zzz"
+        };
+
+        // State Variables
+        let currentStudent = { name: "", class: "" };
+        let currentLevelIdx = 0;
+        let currentWordIdx = 0;
+        let scoreStars = 0;
+        let customAudioMap = {}; // Storage for teacher uploaded sounds { letter: DataURL }
+        let teacherLogs = []; // Logs for teacher report
+
+        // Animation & Canvas State
+        let canvas, ctx;
+        let carPositionX = 10; // Progress along road (0 to 100%)
+        let targetCarPositionX = 10;
+        let animReqId = null;
+
+        // Speech Recognition Setup
+        let recognition = null;
+        let isListening = false;
+
+        /* ==========================================================================
+           INITIALIZATION & SCREEN MANAGEMENT
+           ========================================================================== */
+        window.onload = function() {
+            canvas = document.getElementById("gameCanvas");
+            ctx = canvas.getContext("2d");
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            initSpeechRecognition();
+            setupSoundManagerGrid();
+            renderRoadScene();
+        };
+
+        function resizeCanvas() {
+            if (!canvas) return;
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+        }
+
+        function goToScreen(screenId) {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('victoryScreen').classList.add('hidden');
+
+            document.getElementById(screenId).classList.remove('hidden');
+            if(screenId === 'gameScreen') {
+                document.getElementById('gameScreen').style.display = 'flex';
+                resizeCanvas();
+            }
+        }
+
+        function startGame(event) {
+            event.preventDefault();
+            const name = document.getElementById('pupilName').value.trim();
+            const pupilClass = document.getElementById('pupilClass').value;
+
+            if(!name || !pupilClass) return;
+
+            currentStudent = { name, class: pupilClass };
+            document.getElementById('badgeName').innerText = name;
+            document.getElementById('badgeClass').innerText = pupilClass;
+            document.getElementById('studentBadge').classList.remove('hidden');
+            document.getElementById('studentBadge').classList.add('flex');
+
+            currentLevelIdx = 0;
+            currentWordIdx = 0;
+            scoreStars = 0;
+            teacherLogs = [];
+
+            goToScreen('gameScreen');
+            loadCurrentWord();
+        }
+
+        /* ==========================================================================
+           GAME LOGIC & LEVEL PROGRESSION
+           ========================================================================== */
+        function loadCurrentWord() {
+            // Ensure level index remains strictly in valid bounds
+            if (currentLevelIdx >= LEVELS.length) {
+                currentLevelIdx = LEVELS.length - 1;
+            }
+            if (currentLevelIdx < 0) {
+                currentLevelIdx = 0;
+            }
+
+            const level = LEVELS[currentLevelIdx];
+            if (!level || !level.words || !level.words[currentWordIdx]) {
+                return;
+            }
+
+            const wordData = level.words[currentWordIdx];
+
+            // Update UI Labels
+            document.getElementById('levelBadge').innerText = `Level ${level.id}: ${level.townName}`;
+            document.getElementById('townNameTag').innerText = level.townName;
+            document.getElementById('wordProgressText').innerText = `Word ${currentWordIdx + 1} of ${level.words.length}`;
+            
+            // Update Stars
+            document.getElementById('scoreText').innerText = `${scoreStars} Stars`;
+            updateStarsDisplay();
+
+            // Progress Bar Calculation
+            const totalWords = LEVELS.reduce((acc, l) => acc + l.words.length, 0);
+            const wordsCompletedSoFar = (currentLevelIdx * 5) + currentWordIdx;
+            const progressPct = (wordsCompletedSoFar / totalWords) * 100;
+            document.getElementById('progressBar').style.width = `${progressPct}%`;
+
+            // Calculate Car Target Position on Canvas
+            targetCarPositionX = (currentWordIdx / level.words.length) * 80 + 10; // Keep car within 10% - 90%
+
+            // Render Phoneme Tiles
+            const tilesContainer = document.getElementById('phonemeTiles');
+            tilesContainer.innerHTML = '';
+
+            wordData.phonemes.forEach((ph, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'bounce-letter bg-gradient-to-b from-amber-300 to-yellow-400 hover:from-amber-400 hover:to-yellow-500 text-amber-950 font-extrabold text-3xl sm:text-5xl w-16 h-20 sm:w-20 sm:h-24 rounded-2xl shadow-lg border-b-4 border-amber-600 active:translate-y-1 active:border-b-0 flex items-center justify-center transition';
+                btn.innerText = ph.toUpperCase();
+                btn.onclick = () => playPhonemeSound(ph.toLowerCase());
+                tilesContainer.appendChild(btn);
+            });
+
+            // Clear feedback
+            showFeedback('', 'neutral');
+        }
+
+        function updateStarsDisplay() {
+            const container = document.getElementById('starsContainer');
+            container.innerHTML = '';
+            for (let i = 0; i < 3; i++) {
+                if (i < scoreStars % 3 || (scoreStars >= 3 && i < 3)) {
+                    container.innerHTML += '<i class="fa-solid fa-star"></i>';
+                } else {
+                    container.innerHTML += '<i class="fa-regular fa-star"></i>';
+                }
+            }
+        }
+
+        function playPhonemeSound(letter) {
+            // Priority 1: Custom audio if uploaded by teacher
+            if (customAudioMap[letter]) {
+                const audio = new Audio(customAudioMap[letter]);
+                audio.play();
+                return;
+            }
+
+            // Priority 2: Web Speech Synthesis Phonics Sound
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const soundToSay = PHONEME_SOUND_MAP[letter] || letter;
+                const utterance = new SpeechSynthesisUtterance(soundToSay);
+                utterance.rate = 0.8;
+                utterance.pitch = 1.1;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function speakFullWord() {
+            const targetWord = LEVELS[currentLevelIdx].words[currentWordIdx].word;
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(targetWord);
+                utterance.rate = 0.85;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        /* ==========================================================================
+           SPEECH RECOGNITION & ANSWER VERIFICATION
+           ========================================================================== */
+        function initSpeechRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (SpeechRecognition) {
+                recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = 'en-US';
+
+                recognition.onstart = function() {
+                    isListening = true;
+                    document.getElementById('micBtn').classList.add('mic-active');
+                    document.getElementById('micStatus').innerText = "Listening... Say the word clearly!";
+                    document.getElementById('micStatus').className = "font-bold text-red-500 text-sm md:text-base animate-pulse";
+                };
+
+                recognition.onresult = function(event) {
+                    const spokenText = event.results[0][0].transcript;
+                    verifySpokenAnswer(spokenText);
+                };
+
+                recognition.onerror = function(event) {
+                    stopMicrophoneState();
+                    showFeedback("Could not hear clearly. Try again!", "error");
+                };
+
+                recognition.onend = function() {
+                    stopMicrophoneState();
+                };
+            } else {
+                document.getElementById('micStatus').innerText = "Speech recognition unavailable. Use manual typing below.";
+            }
+        }
+
+        function toggleMicrophone() {
+            if (!recognition) {
+                alert("Speech recognition is not supported in this browser. Please use the manual input fallback below.");
+                return;
+            }
+
+            if (isListening) {
+                recognition.stop();
+            } else {
+                try {
+                    recognition.start();
+                } catch(e) {
+                    recognition.stop();
+                }
+            }
+        }
+
+        function stopMicrophoneState() {
+            isListening = false;
+            document.getElementById('micBtn').classList.remove('mic-active');
+            document.getElementById('micStatus').innerText = "Tap Microphone to Say the Word!";
+            document.getElementById('micStatus').className = "font-bold text-slate-600 text-sm md:text-base";
+        }
+
+        function verifySpokenAnswer(inputWord) {
+            const currentData = LEVELS[currentLevelIdx].words[currentWordIdx];
+            const targetWord = currentData.word.toUpperCase();
+            const cleanInput = inputWord.trim().toUpperCase();
+
+            // Simple fuzzy check or exact match
+            const isCorrect = cleanInput.includes(targetWord) || targetWord.includes(cleanInput);
+
+            // Log for Teacher Assessment
+            logStudentAttempt(targetWord, cleanInput, isCorrect);
+
+            if (isCorrect) {
+                handleCorrectAnswer();
+            } else {
+                showFeedback(`Heard: "${cleanInput}". Try sounding it out again!`, "error");
+            }
+        }
+
+        function handleCorrectAnswer() {
+            scoreStars++;
+            const cheers = ["Great job! 🌟", "Super Blending! 🚗", "Awesome Reading! 🎉", "You're a Star! ⭐", "Fantastic Phonemes! 🏆"];
+            const randomCheer = cheers[Math.floor(Math.random() * cheers.length)];
+            
+            showFeedback(randomCheer, "success");
+            playSuccessSound();
+
+            // Move Car Forward
+            currentWordIdx++;
+
+            setTimeout(() => {
+                // Check level completion
+                if (currentWordIdx >= LEVELS[currentLevelIdx].words.length) {
+                    currentWordIdx = 0;
+                    currentLevelIdx++;
+
+                    if (currentLevelIdx >= LEVELS.length) {
+                        // Game Victory!
+                        showVictoryScreen();
+                        return;
+                    } else {
+                        showFeedback(`Town Cleared! Moving to Level ${currentLevelIdx + 1}! 🏙️`, "success");
+                    }
+                }
+                loadCurrentWord();
+            }, 1800);
+        }
+
+        function showFeedback(text, type) {
+            const box = document.getElementById('feedbackText');
+            box.innerText = text;
+            if (type === 'success') {
+                box.className = "font-extrabold text-lg md:text-xl text-center px-4 py-1.5 rounded-full bg-emerald-100 text-emerald-800 border-2 border-emerald-300 animate-bounce";
+            } else if (type === 'error') {
+                box.className = "font-extrabold text-lg md:text-xl text-center px-4 py-1.5 rounded-full bg-rose-100 text-rose-700 border-2 border-rose-300";
+            } else {
+                box.className = "hidden";
+            }
+        }
+
+        function playSuccessSound() {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const msg = new SpeechSynthesisUtterance("Great Job!");
+                msg.pitch = 1.3;
+                window.speechSynthesis.speak(msg);
+            }
+        }
+
+        // Fallback options
+        function toggleFallbackInput() {
+            const area = document.getElementById('fallbackArea');
+            area.classList.toggle('hidden');
+        }
+
+        function checkManualAnswer() {
+            const val = document.getElementById('manualInput').value;
+            if (val) {
+                verifySpokenAnswer(val);
+                document.getElementById('manualInput').value = '';
+            }
+        }
+
+        function simulateCorrectAnswer() {
+            const targetWord = LEVELS[currentLevelIdx].words[currentWordIdx].word;
+            verifySpokenAnswer(targetWord);
+        }
+
+        function resetCurrentLevel() {
+            currentWordIdx = 0;
+            if (currentLevelIdx >= LEVELS.length) {
+                currentLevelIdx = 0;
+            }
+            loadCurrentWord();
+        }
+
+        function restartGame() {
+            currentLevelIdx = 0;
+            currentWordIdx = 0;
+            scoreStars = 0;
+            goToScreen('gameScreen');
+            loadCurrentWord();
+        }
+
+        function showVictoryScreen() {
+            goToScreen('victoryScreen');
+            document.getElementById('summaryName').innerText = currentStudent.name;
+            document.getElementById('summaryClass').innerText = currentStudent.class;
+            document.getElementById('summaryStars').innerText = `${scoreStars} ⭐`;
+
+            // Trigger Confetti
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 120,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+            }
+        }
+
+        /* ==========================================================================
+           TEACHER REPORT PANEL & LOGGING
+           ========================================================================== */
+        function logStudentAttempt(targetWord, receivedText, isCorrect) {
+            let existing = teacherLogs.find(l => l.word === targetWord);
+            if (existing) {
+                existing.attempts++;
+                existing.lastReceived = receivedText;
+                if (isCorrect) existing.success = true;
+            } else {
+                teacherLogs.push({
+                    word: targetWord,
+                    lastReceived: receivedText,
+                    success: isCorrect,
+                    attempts: 1
+                });
+            }
+        }
+
+        function openTeacherReport() {
+            document.getElementById('reportStudent').innerText = currentStudent.name || "N/A";
+            document.getElementById('reportLevel').innerText = `Level ${currentLevelIdx + 1}`;
+
+            const totalAttempts = teacherLogs.reduce((acc, item) => acc + item.attempts, 0);
+            const successful = teacherLogs.filter(item => item.success).length;
+            const accuracy = totalAttempts > 0 ? Math.round((successful / teacherLogs.length) * 100) : 0;
+            document.getElementById('reportAccuracy').innerText = `${accuracy}%`;
+
+            const tableBody = document.getElementById('reportTableBody');
+            tableBody.innerHTML = '';
+
+            if (teacherLogs.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400 font-normal">No activity recorded yet.</td></tr>`;
+            } else {
+                teacherLogs.forEach(log => {
+                    const row = document.createElement('tr');
+                    row.className = "border-b border-slate-100 hover:bg-slate-50";
+                    row.innerHTML = `
+                        <td class="p-3 font-extrabold text-sky-700">${log.word}</td>
+                        <td class="p-3 text-slate-600">${log.lastReceived || '-'}</td>
+                        <td class="p-3">
+                            ${log.success ? 
+                                '<span class="bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-full text-xs font-bold"><i class="fa-solid fa-check"></i> Passed</span>' : 
+                                '<span class="bg-rose-100 text-rose-700 px-2.5 py-1 rounded-full text-xs font-bold"><i class="fa-solid fa-xmark"></i> Retrying</span>'}
+                        </td>
+                        <td class="p-3 text-slate-600">${log.attempts}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            }
+
+            document.getElementById('teacherModal').classList.remove('hidden');
+        }
+
+        function closeTeacherReport() {
+            document.getElementById('teacherModal').classList.add('hidden');
+        }
+
+        function exportReportCSV() {
+            if (teacherLogs.length === 0) {
+                alert("No data available to export.");
+                return;
+            }
+
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += `Student Name,Class,Target Word,Received Input,Success,Attempts\n`;
+
+            teacherLogs.forEach(l => {
+                csvContent += `"${currentStudent.name}","${currentStudent.class}","${l.word}","${l.lastReceived}",${l.success},${l.attempts}\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Phonics_Report_${currentStudent.name.replace(/\s+/g, '_')}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        /* ==========================================================================
+           CUSTOM ALPHABET SOUND MANAGER
+           ========================================================================== */
+        function setupSoundManagerGrid() {
+            const grid = document.getElementById('alphabetGrid');
+            grid.innerHTML = '';
+
+            const alphabet = "abcdefghijklmnopqrstuvwxyz".split("");
+            alphabet.forEach(letter => {
+                const item = document.createElement('div');
+                item.className = "bg-purple-50 border border-purple-200 p-3 rounded-2xl flex flex-col items-center space-y-2";
+                item.innerHTML = `
+                    <div class="flex items-center justify-between w-full">
+                        <span class="text-xl font-extrabold text-purple-800 uppercase">${letter}</span>
+                        <button onclick="playPhonemeSound('${letter}')" class="text-purple-600 hover:text-purple-800 text-sm">
+                            <i class="fa-solid fa-volume-high"></i>
+                        </button>
+                    </div>
+                    <label class="w-full text-center bg-white hover:bg-purple-100 text-purple-700 border border-purple-300 rounded-xl py-1 text-xs font-bold cursor-pointer transition">
+                        <span>Upload Audio</span>
+                        <input type="file" accept="audio/*" class="hidden" onchange="handleAudioUpload(event, '${letter}')">
+                    </label>
+                `;
+                grid.appendChild(item);
+            });
+        }
+
+        function handleAudioUpload(event, letter) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    customAudioMap[letter] = e.target.result;
+                    alert(`Custom sound for letter '${letter.toUpperCase()}' uploaded successfully!`);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function openSoundManager() {
+            document.getElementById('soundModal').classList.remove('hidden');
+        }
+
+        function closeSoundManager() {
+            document.getElementById('soundModal').classList.add('hidden');
+        }
+
+        function resetCustomSounds() {
+            customAudioMap = {};
+            alert("All custom sounds reset to standard speech synthesis.");
+        }
+
+        /* ==========================================================================
+           2D CANVAS ANIMATION (RED CAR IN A CARTOON TOWN)
+           ========================================================================== */
+        function renderRoadScene() {
+            if (!ctx) return;
+
+            // Interpolate car position smoothly
+            carPositionX += (targetCarPositionX - carPositionX) * 0.05;
+
+            // Clear Canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const w = canvas.width;
+            const h = canvas.height;
+
+            // Background Sky & Grass
+            ctx.fillStyle = '#bae6fd'; // Sky blue
+            ctx.fillRect(0, 0, w, h * 0.6);
+
+            ctx.fillStyle = '#86efac'; // Grass green
+            ctx.fillRect(0, h * 0.6, w, h * 0.4);
+
+            // Cartoon Town Buildings in Background
+            drawTownBackground(ctx, w, h);
+
+            // Road Track
+            const roadY = h * 0.68;
+            const roadHeight = h * 0.22;
+            ctx.fillStyle = '#475569';
+            ctx.fillRect(0, roadY, w, roadHeight);
+
+            // Yellow Road Dashes
+            ctx.strokeStyle = '#fde047';
+            ctx.lineWidth = 4;
+            ctx.setLineDash([15, 15]);
+            ctx.beginPath();
+            ctx.moveTo(0, roadY + roadHeight / 2);
+            ctx.lineTo(w, roadY + roadHeight / 2);
+            ctx.stroke();
+            ctx.setLineDash([]); // Reset dash
+
+            // Draw Checkpoints / Checkered Flag at end
+            drawCheckpoints(ctx, w, roadY);
+
+            // Draw Player's Colorful Red Car
+            const carXPixel = (carPositionX / 100) * (w - 80);
+            drawRedCar(ctx, carXPixel, roadY + 5);
+
+            requestAnimationFrame(renderRoadScene);
+        }
+
+        function drawTownBackground(ctx, w, h) {
+            // Draw colorful simple buildings
+            const buildings = [
+                { x: 0.05, width: 60, height: 70, color: '#fca5a5' },
+                { x: 0.25, width: 80, height: 90, color: '#fdba74' },
+                { x: 0.50, width: 70, height: 60, color: '#fef08a' },
+                { x: 0.70, width: 90, height: 80, color: '#a7f3d0' },
+                { x: 0.88, width: 65, height: 75, color: '#c084fc' }
+            ];
+
+            buildings.forEach(b => {
+                const bx = b.x * w;
+                const by = h * 0.6 - b.height;
+
+                ctx.fillStyle = b.color;
+                ctx.fillRect(bx, by, b.width, b.height);
+
+                // Windows
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(bx + 10, by + 10, 12, 12);
+                ctx.fillRect(bx + b.width - 22, by + 10, 12, 12);
+            });
+
+            // Trees
+            const trees = [0.18, 0.42, 0.65, 0.82];
+            trees.forEach(tx => {
+                const x = tx * w;
+                const y = h * 0.6;
+                // Trunk
+                ctx.fillStyle = '#92400e';
+                ctx.fillRect(x - 4, y - 20, 8, 20);
+                // Leaves
+                ctx.fillStyle = '#22c55e';
+                ctx.beginPath();
+                ctx.arc(x, y - 25, 15, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        function drawCheckpoints(ctx, w, roadY) {
+            // Draw end checkered flag
+            const endX = w - 40;
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(endX, roadY - 30, 4, 35);
+
+            // Flag grid
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(endX + 4, roadY - 30, 20, 15);
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(endX + 4, roadY - 30, 10, 7.5);
+            ctx.fillRect(endX + 14, roadY - 22.5, 10, 7.5);
+        }
+
+        function drawRedCar(ctx, x, y) {
+            ctx.save();
+            ctx.translate(x, y);
+
+            // Car Body Shadow
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+            ctx.beginPath();
+            ctx.ellipse(35, 32, 35, 8, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Main Car Red Body
+            ctx.fillStyle = '#ef4444'; // Red 500
+            ctx.beginPath();
+            ctx.roundRect(5, 12, 60, 18, 8);
+            ctx.fill();
+
+            // Roof / Cabin
+            ctx.fillStyle = '#dc2626'; // Darker red
+            ctx.beginPath();
+            ctx.roundRect(18, 2, 32, 14, 6);
+            ctx.fill();
+
+            // Windows
+            ctx.fillStyle = '#e0f2fe'; // Light blue
+            ctx.fillRect(22, 5, 10, 8);
+            ctx.fillRect(36, 5, 10, 8);
+
+            // Headlight
+            ctx.fillStyle = '#fef08a'; // Yellow
+            ctx.beginPath();
+            ctx.arc(63, 20, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Wheels
+            ctx.fillStyle = '#1e293b'; // Slate dark
+            ctx.beginPath();
+            ctx.arc(18, 30, 7, 0, Math.PI * 2);
+            ctx.arc(52, 30, 7, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Wheel Caps
+            ctx.fillStyle = '#94a3b8';
+            ctx.beginPath();
+            ctx.arc(18, 30, 3, 0, Math.PI * 2);
+            ctx.arc(52, 30, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        }
+    </script>
+</body>
+</html>
